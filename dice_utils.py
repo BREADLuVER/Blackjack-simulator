@@ -24,6 +24,23 @@ def chooseFromDist(p):
     
     return selected_choice
 
+def rollDice(NDice, NSides):
+    """
+    Simulates rolling a specified number of dice, each with a specified number of sides, and returns the total score.
+
+    Parameters:
+    - NDice (int): The number of dice to roll.
+    - NSides (int): The number of sides on each die.
+
+    Returns:
+    - int: The total score from rolling the dice.
+    """
+    # Simulating the dice rolls using a list comprehension and summing the results
+    total_score = sum(random.randint(1, NSides) for _ in range(NDice))
+    
+    return total_score
+
+
 # Testing the chooseFromDist function
 def test_chooseFromDist(p, trials=1000):
     """
@@ -42,6 +59,7 @@ def test_chooseFromDist(p, trials=1000):
 
 # Example probability distribution
 p = [0.1, 0.2, 0.3, 0.4]
+print(rollDice(2, 6))
 
 # Run the test
 test_chooseFromDist(p)
