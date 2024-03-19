@@ -60,7 +60,7 @@ def test_chooseFromDist(p, trials=1000):
 
 # Example probability distribution
 p = [0.1, 0.2, 0.3, 0.4]
-print(rollDice(2, 6))
+#print(rollDice(2, 6))
 
 # Run the test
-test_chooseFromDist(p)
+#test_chooseFromDist(p)

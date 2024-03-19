@@ -1,48 +1,73 @@
 #simulation.py
 from dice_decision import chooseDice
-from dice_utils import rollDice
+from dice_utils import rollDice 
 
 def playGame(NDice, NSides, LTarget, UTarget, LoseCount, WinCount, M):
     """
-    Simulates a single game of dice, updating WinCount and LoseCount matrices based on the outcome.
-
+    Simulates playing one game with the given parameters, updating LoseCount and WinCount matrices based on the game's outcome.
+    Tracks the game's trace for verification and debugging.
+    
     Parameters:
-    - NDice (int): Maximum number of dice that can be rolled in one turn.
-    - NSides (int): Number of sides on each dice.
-    - LTarget, UTarget (int): Lower and upper targets for the game score.
-    - LoseCount, WinCount (list): Matrices for tracking loses and wins.
-    - M (float): Hyperparameter for exploration/exploitation balance.
-
+    - NDice: Maximum number of dice a player may roll.
+    - NSides: Number of sides on each die.
+    - LTarget: The lowest winning score.
+    - UTarget: The highest winning score.
+    - LoseCount: 3D matrix tracking number of losses for each state and dice count.
+    - WinCount: 3D matrix tracking number of wins for each state and dice count.
+    - M: Hyperparameter for explore/exploit trade-off.
+    
     Returns:
-    - tuple: Updated LoseCount and WinCount matrices.
+    - Updated LoseCount and WinCount matrices, and the game trace.
     """
-    # Initialize scores
-    scores = [0, 0]  # [Player1, Player2]
-    currentPlayer = 0  # Start with Player 1
+    # Initialize player scores and game trace
+    scoreA, scoreB = 0, 0
+    gameTrace = []
+    playerTurn = 'A'  # Starting with player A
 
-    # Game loop
     while True:
-        opponent = (currentPlayer + 1) % 2
-        X, Y = scores[currentPlayer], scores[opponent]
+        # Determine current player and opponent scores
+        if playerTurn == 'A':
+            currentScore, opponentScore = scoreA, scoreB
+        else:
+            currentScore, opponentScore = scoreB, scoreA
 
-        # Determine the number of dice to roll
-        nDice = chooseDice(X, Y, WinCount, LoseCount, NDice, M)
-        
-        # Roll dice and update current player's score
-        rollResult = rollDice(nDice, NSides)
-        scores[currentPlayer] += rollResult
+        # Choose the number of dice to roll
+        NDiceChosen = chooseDice((currentScore, opponentScore), LoseCount, WinCount, NDice, M)
+        rollOutcome = rollDice(NDiceChosen, NSides)
 
-        # Check for win or loss
-        if LTarget <= scores[currentPlayer] <= UTarget:
+        # Update current player's score
+        currentScore += rollOutcome
+
+        # Record the action in the game trace
+        gameTrace.append((playerTurn, currentScore, NDiceChosen, rollOutcome))
+
+        # Check for win/loss condition
+        if LTarget <= currentScore <= UTarget:
             # Current player wins
-            WinCount[X][Y][nDice] += 1
+            if playerTurn == 'A':
+                WinCount[scoreA][scoreB][NDiceChosen] += 1
+                scoreA = currentScore
+            else:
+                WinCount[scoreB][scoreA][NDiceChosen] += 1
+                scoreB = currentScore
             break
-        elif scores[currentPlayer] > UTarget:
+        elif currentScore > UTarget:
             # Current player loses
-            LoseCount[X][Y][nDice] += 1
+            if playerTurn == 'A':
+                LoseCount[scoreA][scoreB][NDiceChosen] += 1
+                scoreA = currentScore
+            else:
+                LoseCount[scoreB][scoreA][NDiceChosen] += 1
+                scoreB = currentScore
             break
+        
+        # Update scores based on current player
+        if playerTurn == 'A':
+            scoreA = currentScore
+        else:
+            scoreB = currentScore
 
-        # Switch players
-        currentPlayer = opponent
+        # Switch player turn
+        playerTurn = 'B' if playerTurn == 'A' else 'A'
 
-    return LoseCount, WinCount
+    return LoseCount, WinCount, gameTrace

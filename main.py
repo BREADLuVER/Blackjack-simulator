@@ -25,3 +25,13 @@ def prog3(NDice, NSides, LTarget, UTarget, NGames, M):
     # Extract and return the learned strategy and probabilities
     BestMove, WinProbability = extractAnswer(WinCount, LoseCount, NDice)
     return BestMove, WinProbability
+
+NDice = 2
+NSides = 2
+LTarget = 4
+UTarget = 15
+NGames = 20
+M = 1
+BestMove, WinProbability = prog3(NDice, NSides, LTarget, UTarget, NGames, M)
+print(BestMove)
+print(WinProbability)
