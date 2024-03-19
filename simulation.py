@@ -1,4 +1,4 @@
-# Import necessary functions
+#simulation.py
 from dice_decision import chooseDice
 from dice_utils import rollDice
 

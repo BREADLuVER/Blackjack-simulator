@@ -1,4 +1,4 @@
-# Implementing Module 3: chooseDice(Score, LoseCount, WinCount, NDice, M) in decision_making.py
+#dice_decision.py
 
 def chooseDice(X, Y, WinCount, LoseCount, NDice, M):
     """

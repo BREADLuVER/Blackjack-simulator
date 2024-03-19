@@ -1,38 +1,27 @@
+#main.py
+from simulation import playGame
+from analysis import extractAnswer
 
-
-def extractAnswer(WinCount, LoseCount, NDice):
+def prog3(NDice, NSides, LTarget, UTarget, NGames, M):
     """
-    Extracts the best move and winning probability for each game state.
+    Main function to run the game simulation and extract learned strategies.
 
     Parameters:
-    - WinCount: 3D list of win counts.
-    - LoseCount: 3D list of lose counts.
-    - NDice: Maximum number of dice that can be rolled.
-
-    Returns:
-    - A tuple of two 2D lists: (BestMoveMatrix, WinProbMatrix)
-      - BestMoveMatrix[X][Y] contains the best move for state (X, Y).
-      - WinProbMatrix[X][Y] contains the probability of winning for the best move in state (X, Y).
+    - NDice (int): Maximum number of dice that can be rolled in one turn.
+    - NSides (int): Number of sides on each dice.
+    - LTarget (int): Lower target score for winning.
+    - UTarget (int): Upper target score for winning.
+    - NGames (int): Number of games to simulate.
+    - M (float): Exploration/exploitation balance hyperparameter.
     """
-    LTarget = len(WinCount)  # Assuming square matrices for simplicity
-    BestMoveMatrix = [[0 for _ in range(LTarget)] for _ in range(LTarget)]
-    WinProbMatrix = [[0.0 for _ in range(LTarget)] for _ in range(LTarget)]
-
-    for X in range(LTarget):
-        for Y in range(LTarget):
-            best_fk = -1
-            best_k = 0
-            for k in range(1, NDice + 1):  # Assuming k starts at 1
-                wins = WinCount[X][Y][k]
-                losses = LoseCount[X][Y][k]
-                total = wins + losses
-                fk = 0.5 if total == 0 else wins / total
-
-                if fk > best_fk:
-                    best_fk = fk
-                    best_k = k
-
-            BestMoveMatrix[X][Y] = best_k
-            WinProbMatrix[X][Y] = best_fk if total > 0 else 0.0  # Adjust based on game rules for undefined states
-
-    return (BestMoveMatrix, WinProbMatrix)
+    # Initialize matrices
+    WinCount = [[[0 for _ in range(NDice + 1)] for _ in range(UTarget + 1)] for _ in range(UTarget + 1)]
+    LoseCount = [[[0 for _ in range(NDice + 1)] for _ in range(UTarget + 1)] for _ in range(UTarget + 1)]
+    
+    # Simulate NGames
+    for _ in range(NGames):
+        playGame(NDice, NSides, LTarget, UTarget, LoseCount, WinCount, M)
+    
+    # Extract and return the learned strategy and probabilities
+    BestMove, WinProbability = extractAnswer(WinCount, LoseCount, NDice)
+    return BestMove, WinProbability
