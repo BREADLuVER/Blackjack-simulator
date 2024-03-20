@@ -3,71 +3,94 @@ from dice_decision import chooseDice
 from dice_utils import rollDice 
 
 def playGame(NDice, NSides, LTarget, UTarget, LoseCount, WinCount, M):
-    """
-    Simulates playing one game with the given parameters, updating LoseCount and WinCount matrices based on the game's outcome.
-    Tracks the game's trace for verification and debugging.
-    
-    Parameters:
-    - NDice: Maximum number of dice a player may roll.
-    - NSides: Number of sides on each die.
-    - LTarget: The lowest winning score.
-    - UTarget: The highest winning score.
-    - LoseCount: 3D matrix tracking number of losses for each state and dice count.
-    - WinCount: 3D matrix tracking number of wins for each state and dice count.
-    - M: Hyperparameter for explore/exploit trade-off.
-    
-    Returns:
-    - Updated LoseCount and WinCount matrices, and the game trace.
-    """
-    # Initialize player scores and game trace
     scoreA, scoreB = 0, 0
-    gameTrace = []
-    playerTurn = 'A'  # Starting with player A
+    gameStates = []  # Enhanced game trace to include state transitions
 
     while True:
-        # Determine current player and opponent scores
-        if playerTurn == 'A':
-            currentScore, opponentScore = scoreA, scoreB
-        else:
-            currentScore, opponentScore = scoreB, scoreA
+        for playerTurn in ['A', 'B']:
+            currentScore, opponentScore = (scoreA, scoreB) if playerTurn == 'A' else (scoreB, scoreA)
+            NDiceChosen = chooseDice((currentScore, opponentScore), LoseCount, WinCount, NDice, M)
+            rollOutcome = rollDice(NDiceChosen, NSides)
+            newScore = currentScore + rollOutcome
+            
+            # Log the state before the roll, the action taken, and the outcome
+            gameStates.append(((currentScore, opponentScore, NDiceChosen), rollOutcome, newScore))
 
-        # Choose the number of dice to roll
-        NDiceChosen = chooseDice((currentScore, opponentScore), LoseCount, WinCount, NDice, M)
-        rollOutcome = rollDice(NDiceChosen, NSides)
-
-        # Update current player's score
-        currentScore += rollOutcome
-
-        # Record the action in the game trace
-        gameTrace.append((playerTurn, currentScore, NDiceChosen, rollOutcome))
-
-        # Check for win/loss condition
-        if LTarget <= currentScore <= UTarget:
-            # Current player wins
+            # Update the current player's score
             if playerTurn == 'A':
-                WinCount[scoreA][scoreB][NDiceChosen] += 1
-                scoreA = currentScore
+                scoreA = newScore
             else:
-                WinCount[scoreB][scoreA][NDiceChosen] += 1
-                scoreB = currentScore
+                scoreB = newScore
+
+            # Check win/loss conditions
+            if LTarget <= newScore <= UTarget or newScore > UTarget:
+                break
+        if LTarget <= newScore <= UTarget or newScore > UTarget:
+            finalWinner = playerTurn
             break
-        elif currentScore > UTarget:
-            # Current player loses
-            if playerTurn == 'A':
-                LoseCount[scoreA][scoreB][NDiceChosen] += 1
-                scoreA = currentScore
-            else:
-                LoseCount[scoreB][scoreA][NDiceChosen] += 1
-                scoreB = currentScore
-            break
+
+    # Update matrices based on game outcome
+    for stateInfo in gameStates:
+        state, outcome, finalScore = stateInfo
+        X, Y, k = state
         
-        # Update scores based on current player
-        if playerTurn == 'A':
-            scoreA = currentScore
+        if (finalWinner == 'A' and playerTurn == 'A') or (finalWinner == 'B' and playerTurn == 'B'):
+            if LTarget <= finalScore <= UTarget:
+                WinCount[X][Y][k] += 1
+            else:  # This captures cases where the game continues past a winnable state
+                LoseCount[X][Y][k] += 1
         else:
-            scoreB = currentScore
+            LoseCount[X][Y][k] += 1
 
-        # Switch player turn
-        playerTurn = 'B' if playerTurn == 'A' else 'A'
+    return LoseCount, WinCount, gameStates
 
-    return LoseCount, WinCount, gameTrace
+
+LTarget, UTarget, NDice, NSides, M = 4, 4, 2, 2, 0.5
+LoseCount = [[[0 for _ in range(NDice + 1)] for _ in range(UTarget + 1)] for _ in range(UTarget + 1)]
+WinCount = [[[0 for _ in range(NDice + 1)] for _ in range(UTarget + 1)] for _ in range(UTarget + 1)]
+
+# Test run of playGame
+def debugPlayGame(result):
+    LoseCount, WinCount, game_trace = result
+    # Initialize trackers for expected updates
+    expected_LoseCount_updates = {}
+    expected_WinCount_updates = {}
+
+    # Process game_trace to determine expected updates
+    final_score_A, final_score_B = game_trace[-1][-1], game_trace[-2][-1]  # Last two scores are the final scores of A and B
+    winner = 'A' if final_score_A >= LTarget and final_score_A <= UTarget else 'B'
+    loser = 'B' if winner == 'A' else 'A'
+
+    # Iterate through game_trace to populate expected updates
+    for state_info in game_trace:
+        pre_state, outcome, post_state = state_info
+        pre_score_A, pre_score_B, NDiceChosen = pre_state if state_info[0][0] == 'A' else (pre_state[1], pre_state[0], pre_state[2])
+
+        key = (pre_score_A, pre_score_B, NDiceChosen)
+        if winner == 'A' and state_info[0] == 'A':
+            expected_WinCount_updates[key] = expected_WinCount_updates.get(key, 0) + 1
+        elif loser == 'A' and state_info[0] == 'A':
+            expected_LoseCount_updates[key] = expected_LoseCount_updates.get(key, 0) + 1
+        elif winner == 'B' and state_info[0] == 'B':
+            expected_WinCount_updates[key] = expected_WinCount_updates.get(key, 0) + 1
+        elif loser == 'B' and state_info[0] == 'B':
+            expected_LoseCount_updates[key] = expected_LoseCount_updates.get(key, 0) + 1
+
+    # Compare expected updates with actual matrices
+    discrepancies_found = False
+    for key, expected_count in expected_WinCount_updates.items():
+        if WinCount[key[0]][key[1]][key[2]] != expected_count:
+            discrepancies_found = True
+            print(f"Discrepancy found in WinCount at {key}: Expected {expected_count}, Found {WinCount[key[0]][key[1]][key[2]]}")
+    
+    for key, expected_count in expected_LoseCount_updates.items():
+        if LoseCount[key[0]][key[1]][key[2]] != expected_count:
+            discrepancies_found = True
+            print(f"Discrepancy found in LoseCount at {key}: Expected {expected_count}, Found {LoseCount[key[0]][key[1]][key[2]]}")
+
+    if not discrepancies_found:
+        print("No discrepancies found. The game logic and matrix updates are consistent with the game trace.")
+
+# Output the game trace and check updates to LoseCount and WinCount matrices
+result = playGame(NDice, NSides, LTarget, UTarget, LoseCount, WinCount, M)
+debugPlayGame(result)
