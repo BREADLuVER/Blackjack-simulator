@@ -6,23 +6,24 @@ from dice_utils import rollDice
 # gameStates.append({'player': currentPlayer, 'scoreA': scoreA, 'scoreB': scoreB, 'nDice': nDice, 'rollOutcome': rollOutcome})
 
 def playGame(NDice, NSides, LTarget, UTarget, LoseCount, WinCount, M):
-    def rollDice(nDice, NSides):
-        # Simulate rolling `nDice` number of dice, each with `NSides` sides
-        return sum(random.randint(1, NSides) for _ in range(nDice))
-
     scoreA, scoreB = 0, 0  # Initial scores for both players
     currentPlayer = 'A'  # Starting player
     gameStates = []  # Track the sequence of game states
-    
+    prev_state=[]
     while True:
         # Determine number of dice to roll - could be enhanced with strategy
         nDice = random.randint(1, NDice)  # Randomly choose the number of dice to roll
 
         # Record the state before the roll
-        prevState = (scoreA, scoreB, nDice) if currentPlayer == 'A' else (scoreB, scoreA, nDice)
+        if currentPlayer == 'A':
+            prevState = (scoreA, scoreB, nDice)
+        else: 
+            prevState=(scoreB, scoreA, nDice)
         print(prevState)
+        prev_state.append({'player': currentPlayer, 'scoreA': scoreA, 'scoreB': scoreB, 'nDice': nDice})
         # Roll the dice
-        rollOutcome = rollDice(nDice, NSides)
+        dice = chooseDice((scoreA, scoreB), LoseCount, WinCount, NDice, M)
+        rollOutcome = rollDice(dice, NSides)
 
         # Update scores
         if currentPlayer == 'A':
@@ -42,15 +43,19 @@ def playGame(NDice, NSides, LTarget, UTarget, LoseCount, WinCount, M):
 
     # Update Win/Lose counts based on game outcome
     winner = 'A' if LTarget <= scoreA <= UTarget else 'B'
-    for state in reversed(gameStates):
+    for state in (prev_state):
         if state['player'] == winner:
-            WinCount[state['scoreA']][state['scoreB']][state['nDice']] += 1
+            if winner == 'A':
+                WinCount[state['scoreA']][state['scoreB']][state['nDice']] += 1
+            else:
+                WinCount[state['scoreB']][state['scoreA']][state['nDice']] += 1
         else:
-            LoseCount[state['scoreA']][state['scoreB']][state['nDice']] += 1
+            if winner == 'A':
+                LoseCount[state['scoreA']][state['scoreB']][state['nDice']] += 1
+            else:
+                LoseCount[state['scoreB']][state['scoreA']][state['nDice']] += 1
 
     return LoseCount, WinCount, gameStates
-
-
 
 
 LTarget, UTarget, NDice, NSides, M = 4, 4, 2, 2, 0.5

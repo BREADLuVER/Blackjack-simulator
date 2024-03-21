@@ -1,7 +1,7 @@
 #dice_decision.py
 
 import random
-from dice_utils import chooseFromDist, rollDice
+from dice_utils import chooseFromDist
 
 def calculate_fk(Score, LoseCount, WinCount, k):
     """
