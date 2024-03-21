@@ -4,27 +4,24 @@ import random
 from dice_utils import chooseFromDist
 
 def calculate_fk(Score, LoseCount, WinCount, k):
-    """
-    Calculate fk for a given k, where fk is the ratio of wins to total games played for a specific number of dice rolled.
-    
-    Parameters:
-    - Score (tuple): Current score of the player and opponent (X, Y).
-    - LoseCount (3D array): Tracks the number of losses for each state and number of dice.
-    - WinCount (3D array): Tracks the number of wins for each state and number of dice.
-    - k (int): Number of dice rolled.
-    
-    Returns:
-    - float: The calculated fk value.
-    """
     X, Y = Score
     wins = WinCount[X][Y][k]
-    # print("Wins:", wins)
     losses = LoseCount[X][Y][k]
-    total = wins + losses
-    if total == 0:
+
+    # If both wins and losses are zero, return 0.5
+    if wins == 0 and losses == 0:
         return 0.5
-    else:
-        return wins / total
+
+    # If wins are not zero but losses are, avoid division by zero by returning 0
+    # This is a special case where you might expect to return 1 (since wins occurred without loss)
+    # But as per your instruction, if there's a potential division by zero, return 0.
+    if wins == 0:
+        return 0
+
+    # Otherwise, calculate fk as normal
+    total = wins + losses
+    return wins / total
+
 
 def identify_best_action(f):
     """
@@ -38,25 +35,45 @@ def identify_best_action(f):
     """
     return f.index(max(f)) + 1  # Adding 1 because actions (k) start from 1
 
-def calculate_probabilities(Score, LoseCount, WinCount, NDice, M, k_hat):
+def calculate_probabilities(Score, LoseCount, WinCount, NDice, M):
     X, Y = Score
-    T = sum(WinCount[X][Y][k] + LoseCount[X][Y][k] for k in range(1, NDice + 1))
-    f = [calculate_fk(Score, LoseCount, WinCount, k) for k in range(1, NDice + 1)]
-    fk_hat = f[k_hat - 1]
-    s = sum(f[k - 1] for k in range(1, NDice + 1) if k != k_hat)
+    T = round(sum(WinCount[X][Y][k] + LoseCount[X][Y][k] for k in range(1, NDice + 1)), 2)
+    f = [round(calculate_fk(Score, LoseCount, WinCount, k), 2) for k in range(1, NDice + 1)]
 
-    pk_hat = (T * fk_hat + M) / (T * fk_hat + NDice * M)
+    # Integrate identify_best_action logic here
+    k_hat = f.index(max(f)) + 1  # Finding the best action based on the highest fk value
+
+    fk_hat = round(f[k_hat - 1], 2)
+    s = round(sum(f[k - 1] for k in range(1, NDice + 1) if k != k_hat), 2)
+
+    pk_hat = round((T * fk_hat + M) / (T * fk_hat + NDice * M), 2)
     
     probabilities = [0] * NDice
     for k in range(1, NDice + 1):
         if k == k_hat:
             probabilities[k - 1] = pk_hat
         else:
-            pk = (1 - pk_hat) * (T * f[k - 1] + M) / (s * T + (NDice - 1) * M)
+            pk = round((1 - pk_hat) * (T * f[k - 1] + M) / (s * T + (NDice - 1) * M), 2)
             probabilities[k - 1] = pk
+
+
+        print(f'For dice {k}:')
+        print(f'  WinCount[{X},{Y},{k}]: {WinCount[X][Y][k]}')
+        print(f'  LoseCount[{X},{Y},{k}]: {LoseCount[X][Y][k]}')
+        print(f'  fk for this dice: {f[k - 1]} (calculated as {WinCount[X][Y][k]} / ({WinCount[X][Y][k]} + {LoseCount[X][Y][k]}))')
+        if k == k_hat:
+            print(f'  pk for this dice: {probabilities[k - 1]} (calculated as ({T} * {fk_hat} + {M}) / ({T} * {fk_hat} + {NDice} * {M}) = {T * fk_hat + M} / {T * fk_hat + NDice * M})')
+        else:
+            print(f'  pk for this dice: {probabilities[k - 1]} (calculated as (1 - {pk_hat}) * ({T} * {f[k - 1]} + {M}) / ({s} * {T} + ({NDice} - 1) * {M}) = {(1 - pk_hat) * (T * f[k - 1] + M)} / {s * T + (NDice - 1) * M})')
+        print()
+    
+    print(f'k_hat (best action): {k_hat}')
+    print(f'fk_hat (value of best action): {fk_hat}')
+    print(f'T: {T}')
+    print(f's: {s}')
+    print(f'pk_hat: {pk_hat}')
     
     return probabilities
-
 
 def chooseDice(Score, LoseCount, WinCount, NDice, M):
     """
@@ -74,10 +91,12 @@ def chooseDice(Score, LoseCount, WinCount, NDice, M):
     """
     f = [calculate_fk(Score, LoseCount, WinCount, k) for k in range(1, NDice + 1)]
     k_hat = identify_best_action(f)
-    probabilities = calculate_probabilities(Score, LoseCount, WinCount, NDice, M, k_hat)
-    print("Probabilities:", probabilities)
+    probabilities = calculate_probabilities(Score, LoseCount, WinCount, NDice, M)
+    #print("Probabilities:", probabilities)
     # Using the provided chooseFromDist function to select the number of dice based on the calculated probabilities
     chosen_dice = chooseFromDist(probabilities)
+    print(f'Chosen dice: {chosen_dice}')
+    print('---------------------------------')
     return chosen_dice
 
 def test_chooseDice(NDice, NSides, LTarget, UTarget, M, test_runs=1000):
