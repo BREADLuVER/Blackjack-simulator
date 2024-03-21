@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-from simulation import playGame
+from dice_simulation import playGame
 
 class TestPlayGame(unittest.TestCase):
     def setUp(self):

@@ -88,7 +88,7 @@ def chooseDice(Score, LoseCount, WinCount, NDice, M):
     f = [calculate_fk(Score, LoseCount, WinCount, k) for k in range(1, NDice + 1)]
     k_hat = identify_best_action(f)
     probabilities = calculate_probabilities(Score, LoseCount, WinCount, NDice, M, k_hat)
-    
+    #print("Probabilities:", probabilities)
     # Using the provided chooseFromDist function to select the number of dice based on the calculated probabilities
     chosen_dice = chooseFromDist(probabilities)
     return chosen_dice

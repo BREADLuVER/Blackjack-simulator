@@ -17,7 +17,7 @@ def playGame(NDice, NSides, LTarget, UTarget, LoseCount, WinCount, M):
             prevState = (scoreA, scoreB, nDice)
         else: 
             prevState=(scoreB, scoreA, nDice)
-        print(prevState)
+        #print(prevState)
         prev_state.append({'player': currentPlayer, 'scoreA': scoreA, 'scoreB': scoreB, 'nDice': nDice})
         # Roll the dice
         dice = chooseDice((scoreA, scoreB), LoseCount, WinCount, NDice, M)
@@ -62,13 +62,13 @@ LoseCount = [[[0 for _ in range(NDice + 1)] for _ in range(MaxScore + 1)] for _ 
 WinCount = [[[0 for _ in range(NDice + 1)] for _ in range(MaxScore + 1)] for _ in range(MaxScore + 1)]
 
 
-# Output the game trace and check updates to LoseCount and WinCount matrices
-l, q, gameStates = playGame(NDice, NSides, LTarget, UTarget, LoseCount, WinCount, M)
-print("Game States:")
-print(gameStates)
-print("LoseCount:")
-for i in l:
-    print(i)
-print("WinCount:")
-for i in q:
-    print(i)
+# # Output the game trace and check updates to LoseCount and WinCount matrices
+# l, q, gameStates = playGame(NDice, NSides, LTarget, UTarget, LoseCount, WinCount, M)
+# #print("Game States:")
+# #print(gameStates)
+# #print("LoseCount:")
+# for i in l:
+#     print(i)
+# print("WinCount:")
+# for i in q:
+#     print(i)

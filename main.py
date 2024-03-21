@@ -1,6 +1,6 @@
 #main.py
-from simulation import playGame
-from analysis import extractAnswer
+from dice_simulation import playGame
+from dice_analysis import extractAnswer
 
 def prog3(NDice, NSides, LTarget, UTarget, NGames, M):
     """
@@ -20,8 +20,16 @@ def prog3(NDice, NSides, LTarget, UTarget, NGames, M):
     
     # Simulate NGames
     for _ in range(NGames):
-        playGame(NDice, NSides, LTarget, UTarget, LoseCount, WinCount, M)
-    
+        LoseCount, WinCount, gam = playGame(NDice, NSides, LTarget, UTarget, LoseCount, WinCount, M)
+        print("Game States:")
+        for row in gam:
+            print(row)
+        print("LoseCount:")
+        for row in LoseCount:
+            print(row)
+        print("WinCount:")
+        for row in WinCount:
+            print(row)
     # Extract and return the learned strategy and probabilities
     BestMove, WinProbability = extractAnswer(WinCount, LoseCount, NDice)
     return BestMove, WinProbability
@@ -29,9 +37,7 @@ def prog3(NDice, NSides, LTarget, UTarget, NGames, M):
 NDice = 2
 NSides = 2
 LTarget = 4
-UTarget = 15
-NGames = 20
+UTarget = 4
+NGames = 3
 M = 1
 BestMove, WinProbability = prog3(NDice, NSides, LTarget, UTarget, NGames, M)
-print(BestMove)
-print(WinProbability)
