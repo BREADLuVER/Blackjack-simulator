@@ -40,8 +40,13 @@ def calculate_probabilities(Score, LoseCount, WinCount, NDice, M):
     T = round(sum(WinCount[X][Y][k] + LoseCount[X][Y][k] for k in range(1, NDice + 1)), 2)
     f = [round(calculate_fk(Score, LoseCount, WinCount, k), 2) for k in range(1, NDice + 1)]
 
-    # Integrate identify_best_action logic here
-    k_hat = f.index(max(f)) + 1  # Finding the best action based on the highest fk value
+    max_fk = max(f)
+    # Find all k values that have the highest fk
+    best_actions = [k for k, fk in enumerate(f, start=1) if fk == max_fk]
+    
+    # Randomly choose among the best actions if there are multiple
+    k_hat = random.choice(best_actions)
+    # Finding the best action based on the highest fk value
 
     fk_hat = round(f[k_hat - 1], 2)
     s = round(sum(f[k - 1] for k in range(1, NDice + 1) if k != k_hat), 2)
@@ -65,13 +70,13 @@ def calculate_probabilities(Score, LoseCount, WinCount, NDice, M):
             print(f'  pk for this dice: {probabilities[k - 1]} (calculated as ({T} * {fk_hat} + {M}) / ({T} * {fk_hat} + {NDice} * {M}) = {T * fk_hat + M} / {T * fk_hat + NDice * M})')
         else:
             print(f'  pk for this dice: {probabilities[k - 1]} (calculated as (1 - {pk_hat}) * ({T} * {f[k - 1]} + {M}) / ({s} * {T} + ({NDice} - 1) * {M}) = {(1 - pk_hat) * (T * f[k - 1] + M)} / {s * T + (NDice - 1) * M})')
-        print()
     
     print(f'k_hat (best action): {k_hat}')
     print(f'fk_hat (value of best action): {fk_hat}')
     print(f'T: {T}')
     print(f's: {s}')
     print(f'pk_hat: {pk_hat}')
+    print()
     
     return probabilities
 
@@ -95,8 +100,7 @@ def chooseDice(Score, LoseCount, WinCount, NDice, M):
     #print("Probabilities:", probabilities)
     # Using the provided chooseFromDist function to select the number of dice based on the calculated probabilities
     chosen_dice = chooseFromDist(probabilities)
-    print(f'Chosen dice: {chosen_dice}')
-    print('---------------------------------')
+    print
     return chosen_dice
 
 def test_chooseDice(NDice, NSides, LTarget, UTarget, M, test_runs=1000):
