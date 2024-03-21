@@ -21,15 +21,15 @@ def prog3(NDice, NSides, LTarget, UTarget, NGames, M):
     # Simulate NGames
     for _ in range(NGames):
         LoseCount, WinCount, gam = playGame(NDice, NSides, LTarget, UTarget, LoseCount, WinCount, M)
-        print("Game States:")
-        for row in gam:
-            print(row)
-        print("LoseCount:")
-        for row in LoseCount:
-            print(row)
-        print("WinCount:")
-        for row in WinCount:
-            print(row)
+        # print("Game States:")
+        # for row in gam:
+        #     print(row)
+        # print("LoseCount:")
+        # for row in LoseCount:
+        #     print(row)
+        # print("WinCount:")
+        # for row in WinCount:
+        #     print(row)
         BestMove, WinProbability = extractAnswer(WinCount, LoseCount, NDice, LTarget)
         # print("Best Move:")
         # for row in BestMove:
@@ -37,6 +37,7 @@ def prog3(NDice, NSides, LTarget, UTarget, NGames, M):
         # print("Win Probability:")
         # for row in WinProbability:
         #     print(row)
+        print('-----------------------\n')
     return BestMove, WinProbability
 
 NDice = 2

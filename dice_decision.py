@@ -77,7 +77,6 @@ def calculate_probabilities(Score, LoseCount, WinCount, NDice, M):
     print(f's: {s}')
     print(f'pk_hat: {pk_hat}')
     print()
-    
     return probabilities
 
 def chooseDice(Score, LoseCount, WinCount, NDice, M):
@@ -100,7 +99,6 @@ def chooseDice(Score, LoseCount, WinCount, NDice, M):
     #print("Probabilities:", probabilities)
     # Using the provided chooseFromDist function to select the number of dice based on the calculated probabilities
     chosen_dice = chooseFromDist(probabilities)
-    print
     return chosen_dice
 
 def test_chooseDice(NDice, NSides, LTarget, UTarget, M, test_runs=1000):
