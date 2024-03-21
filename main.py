@@ -30,14 +30,21 @@ def prog3(NDice, NSides, LTarget, UTarget, NGames, M):
         print("WinCount:")
         for row in WinCount:
             print(row)
-    # Extract and return the learned strategy and probabilities
-    BestMove, WinProbability = extractAnswer(WinCount, LoseCount, NDice)
+        BestMove, WinProbability = extractAnswer(WinCount, LoseCount, NDice, LTarget)
+        print("Best Move:")
+        for row in BestMove:
+            print(row)
+        print("Win Probability:")
+        for row in WinProbability:
+            print(row)
     return BestMove, WinProbability
 
 NDice = 2
 NSides = 2
 LTarget = 4
 UTarget = 4
-NGames = 3
+NGames = 2
 M = 1
 BestMove, WinProbability = prog3(NDice, NSides, LTarget, UTarget, NGames, M)
+# print("Best Move:", BestMove)
+# print("Win Probability:", WinProbability)
