@@ -1,103 +1,55 @@
 #simulation.py
+import random
 from dice_decision import chooseDice
 from dice_utils import rollDice 
 # gameStates = [] 
 # gameStates.append({'player': currentPlayer, 'scoreA': scoreA, 'scoreB': scoreB, 'nDice': nDice, 'rollOutcome': rollOutcome})
 
 def playGame(NDice, NSides, LTarget, UTarget, LoseCount, WinCount, M):
-    import random
-
-    # Initial scores and starting player
-    scoreA, scoreB = 0, 0
-    currentPlayer = 'A'
-
-    # Store the game states for trace
-    gameStates = []
-
-    # Helper function to simulate dice rolls
     def rollDice(nDice, NSides):
+        # Simulate rolling `nDice` number of dice, each with `NSides` sides
         return sum(random.randint(1, NSides) for _ in range(nDice))
 
-    # Loop until one of the players wins
+    scoreA, scoreB = 0, 0  # Initial scores for both players
+    currentPlayer = 'A'  # Starting player
+    gameStates = []  # Track the sequence of game states
+    
     while True:
-        # Roll dice and update score
-        rollOutcome = rollDice(NDice, NSides)
+        # Determine number of dice to roll - could be enhanced with strategy
+        nDice = random.randint(1, NDice)  # Randomly choose the number of dice to roll
+
+        # Record the state before the roll
+        prevState = (scoreA, scoreB, nDice) if currentPlayer == 'A' else (scoreB, scoreA, nDice)
+        print(prevState)
+        # Roll the dice
+        rollOutcome = rollDice(nDice, NSides)
+
+        # Update scores
         if currentPlayer == 'A':
             scoreA += rollOutcome
-            prevState = [scoreA - rollOutcome, scoreB, NDice]  # Current player's previous score, opponent's score, dice count
         else:
             scoreB += rollOutcome
-            prevState = [scoreB - rollOutcome, scoreA, NDice]  # Current player's previous score, opponent's score, dice count
 
-        # Record the game state
-        gameStates.append({
-            'player': currentPlayer,
-            'scoreA': scoreA,
-            'scoreB': scoreB,
-            'nDice': NDice,
-            'rollOutcome': rollOutcome
-        })
+        # Log the game state
+        gameStates.append({'player': currentPlayer, 'scoreA': scoreA, 'scoreB': scoreB, 'nDice': nDice, 'rollOutcome': rollOutcome})
 
-        print(f'prevState {prevState}')
-        # Check win condition or if a player's score goes beyond UTarget
-        if LTarget <= scoreA <= UTarget:
-            # Iterating through gameStates to update WinCount and LoseCount accordingly
-            for state in gameStates:
-                player, scoreA, scoreB, nDice = state['player'], state['scoreA'], state['scoreB'], state['nDice']
-                print(f'win middleA: player {player} scoreA {scoreA} scoreB {scoreB} nDice {nDice}')
-                if player == 'A':
-                    if scoreA > scoreB:
-                        WinCount[scoreA-nDice][scoreB][nDice] += 1
-                    else:
-                        LoseCount[scoreA-nDice][scoreB][nDice] += 1
-                else:
-                    if scoreB > scoreA:
-                        WinCount[scoreB-nDice][scoreA][nDice] += 1
-                    else:
-                        LoseCount[scoreB-nDice][scoreA][nDice] += 1
-            break
-        elif LTarget <= scoreB <= UTarget:
-            # Similar iteration for player B
-            for state in gameStates:
-                player, scoreA, scoreB, nDice = state['player'], state['scoreA'], state['scoreB'], state['nDice']
-                print(f'win middleB: player {player} scoreA {scoreA} scoreB {scoreB} nDice {nDice}')
-                if player == 'B':
-                    if scoreB > scoreA:
-                        WinCount[scoreB-nDice][scoreA][nDice] += 1
-                    else:
-                        LoseCount[scoreB-nDice][scoreA][nDice] += 1
-                else:
-                    if scoreA > scoreB:
-                        WinCount[scoreA-nDice][scoreB][nDice] += 1
-                    else:
-                        LoseCount[scoreA-nDice][scoreB][nDice] += 1
-            break
-        elif scoreA > UTarget:
-            for state in gameStates:
-                player, scoreA, scoreB, nDice = state['player'], state['scoreA'], state['scoreB'], state['nDice']
-                print(f'lose upperA: player {player} scoreA {scoreA} scoreB {scoreB} nDice {nDice}')
-                if player == 'B':
-                    WinCount[scoreB-nDice][scoreA][nDice] += 1
-                else:
-                    LoseCount[scoreA-nDice][scoreB][nDice] += 1
-            break
-        
-        elif scoreB > UTarget:
-            for state in gameStates:
-                player, scoreA, scoreB, nDice = state['player'], state['scoreA'], state['scoreB'], state['nDice']
-                print(f'lose upperA: player {player} scoreA {scoreA} scoreB {scoreB} nDice {nDice}')
-                if player == 'A':
-                    WinCount[scoreA-nDice][scoreB][nDice] += 1
-                else:
-                    LoseCount[scoreB-nDice][scoreA][nDice] += 1
+        # Check for win or exceed conditions to break the loop
+        if scoreA >= LTarget and scoreA <= UTarget or scoreB > UTarget or scoreB >= LTarget and scoreB <= UTarget or scoreA > UTarget:
             break
 
-        # Switch player
+        # Switch players
         currentPlayer = 'B' if currentPlayer == 'A' else 'A'
-        # Adjust NDice based on M
-        NDice = 1 if random.random() < M else 2
+
+    # Update Win/Lose counts based on game outcome
+    winner = 'A' if LTarget <= scoreA <= UTarget else 'B'
+    for state in reversed(gameStates):
+        if state['player'] == winner:
+            WinCount[state['scoreA']][state['scoreB']][state['nDice']] += 1
+        else:
+            LoseCount[state['scoreA']][state['scoreB']][state['nDice']] += 1
 
     return LoseCount, WinCount, gameStates
+
 
 
 
