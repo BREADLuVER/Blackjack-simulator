@@ -1,9 +1,7 @@
 #simulation.py
 import random
-from dice_decision import chooseDice
-from dice_utils import rollDice 
-# gameStates = [] 
-# gameStates.append({'player': currentPlayer, 'scoreA': scoreA, 'scoreB': scoreB, 'nDice': nDice, 'rollOutcome': rollOutcome})
+from dice_decision import chooseDice, test_chooseDice
+from dice_utils import rollDice
 
 def playGame(NDice, NSides, LTarget, UTarget, LoseCount, WinCount, M):
     scoreA, scoreB = 0, 0  # Initial scores for both players

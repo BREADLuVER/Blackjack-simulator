@@ -134,4 +134,3 @@ def test_chooseDice(NDice, NSides, LTarget, UTarget, M, test_runs=1000):
 # Note: This test assumes chooseFromDist is defined within the chooseDice function or globally accessible.
 
 test_distribution = test_chooseDice(NDice=2, NSides=6, LTarget=15, UTarget=17, M=4, test_runs=1000)
-print(test_distribution)
