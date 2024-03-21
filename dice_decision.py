@@ -18,6 +18,7 @@ def calculate_fk(Score, LoseCount, WinCount, k):
     """
     X, Y = Score
     wins = WinCount[X][Y][k]
+    # print("Wins:", wins)
     losses = LoseCount[X][Y][k]
     total = wins + losses
     if total == 0:
@@ -38,38 +39,24 @@ def identify_best_action(f):
     return f.index(max(f)) + 1  # Adding 1 because actions (k) start from 1
 
 def calculate_probabilities(Score, LoseCount, WinCount, NDice, M, k_hat):
-    """
-    Calculate the probabilities for choosing each number of dice to roll.
-    
-    Parameters:
-    - Score (tuple): Current score of the player and opponent (X, Y).
-    - LoseCount (3D array): Tracks the number of losses.
-    - WinCount (3D array): Tracks the number of wins.
-    - NDice (int): Maximum number of dice a player can roll.
-    - M (float): Hyperparameter controlling the explore/exploit trade-off.
-    - k_hat (int): Best action determined by highest fk value.
-    
-    Returns:
-    - list: List of probabilities for choosing each number of dice to roll.
-    """
     X, Y = Score
     T = sum(WinCount[X][Y][k] + LoseCount[X][Y][k] for k in range(1, NDice + 1))
     f = [calculate_fk(Score, LoseCount, WinCount, k) for k in range(1, NDice + 1)]
+    fk_hat = f[k_hat - 1]
     s = sum(f[k - 1] for k in range(1, NDice + 1) if k != k_hat)
+
+    pk_hat = (T * fk_hat + M) / (T * fk_hat + NDice * M)
     
-    probabilities = []
+    probabilities = [0] * NDice
     for k in range(1, NDice + 1):
         if k == k_hat:
-            pk = (T * f[k - 1] + M) / (T * f[k - 1] + NDice * M)
+            probabilities[k - 1] = pk_hat
         else:
-            pk = ((1 - (T * f[k_hat - 1] + M) / (T * f[k_hat - 1] + NDice * M)) * s * T) / (T * f[k - 1] + M + (NDice - 1) * M)
-        probabilities.append(pk)
+            pk = (1 - pk_hat) * (T * f[k - 1] + M) / (s * T + (NDice - 1) * M)
+            probabilities[k - 1] = pk
     
-    # Normalizing probabilities to ensure they sum to 1 due to potential rounding errors
-    total_prob = sum(probabilities)
-    normalized_probabilities = [p / total_prob for p in probabilities]
-    
-    return normalized_probabilities
+    return probabilities
+
 
 def chooseDice(Score, LoseCount, WinCount, NDice, M):
     """
@@ -88,7 +75,7 @@ def chooseDice(Score, LoseCount, WinCount, NDice, M):
     f = [calculate_fk(Score, LoseCount, WinCount, k) for k in range(1, NDice + 1)]
     k_hat = identify_best_action(f)
     probabilities = calculate_probabilities(Score, LoseCount, WinCount, NDice, M, k_hat)
-    #print("Probabilities:", probabilities)
+    print("Probabilities:", probabilities)
     # Using the provided chooseFromDist function to select the number of dice based on the calculated probabilities
     chosen_dice = chooseFromDist(probabilities)
     return chosen_dice
@@ -133,4 +120,7 @@ def test_chooseDice(NDice, NSides, LTarget, UTarget, M, test_runs=1000):
 # let's perform a test run with some example parameters.
 # Note: This test assumes chooseFromDist is defined within the chooseDice function or globally accessible.
 
-test_distribution = test_chooseDice(NDice=2, NSides=6, LTarget=15, UTarget=17, M=4, test_runs=1000)
+# test_distribution = test_chooseDice(NDice=2, NSides=6, LTarget=15, UTarget=17, M=4, test_runs=20)
+# print("Chosen Dice Distribution:")
+# for k, count in test_distribution.items():
+#     print(f"Dice {k}: {count} times ({(count / 1000) * 100:.2f}%)")

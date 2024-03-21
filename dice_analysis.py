@@ -1,26 +1,45 @@
 #analysis.py
 def extractAnswer(WinCount, LoseCount, NDice, LTarget):
-    optimal_dice_matrix = [[0 for _ in range(LTarget)] for _ in range(LTarget)]
-    win_prob_matrix = [[0 for _ in range(LTarget)] for _ in range(LTarget)]
+    """
+    Extracts the best move (number of dice to roll) and the win probability for each state in the game.
+
+    Parameters:
+    - WinCount: A 3D list containing win counts for each state and dice count.
+    - LoseCount: A 3D list containing lose counts for each state and dice count.
+    - NDice: The maximum number of dice that can be rolled.
+    - LTarget: The lower target score for winning.
+
+    Returns:
+    - BestMove: A 2D list indicating the best number of dice to roll for each state.
+    - WinProbability: A 2D list indicating the win probability for the best move in each state.
+    """
+    # Initialize matrices to store the best move and the win probability for each state
+    BestMove = [[0 for _ in range(LTarget + 1)] for _ in range(LTarget + 1)]
+    WinProbability = [[0 for _ in range(LTarget + 1)] for _ in range(LTarget + 1)]
     
-    for X in range(LTarget):
-        for Y in range(LTarget):
-            max_prob = 0
-            optimal_dice = 0
+    # Iterate over each possible state
+    for X in range(LTarget + 1):
+        for Y in range(LTarget + 1):
+            # Variables to keep track of the best move and its win probability
+            best_prob = 0
+            best_dice = 0
+            
+            # Iterate over each possible number of dice to roll
             for k in range(1, NDice + 1):
                 total_games = WinCount[X][Y][k] + LoseCount[X][Y][k]
-                if total_games > 0:
-                    win_prob = WinCount[X][Y][k] / total_games
-                    if win_prob > max_prob:
-                        max_prob = win_prob
-                        optimal_dice = k
-                else:
-                    win_prob = 0
+                win_prob = WinCount[X][Y][k] / total_games if total_games > 0 else 0
                 
-                if k == 1:  # Ensure we have a default value even if all probs are 0
-                    optimal_dice = 1
-                
-            optimal_dice_matrix[X][Y] = optimal_dice
-            win_prob_matrix[X][Y] = max_prob
+                # Update the best move if this move has a higher win probability
+                if win_prob > best_prob:
+                    best_prob = win_prob
+                    best_dice = k
             
-    return optimal_dice_matrix, win_prob_matrix
+            # Update the matrices with the best move and its win probability
+            BestMove[X][Y] = best_dice
+            WinProbability[X][Y] = best_prob
+    
+    return BestMove, WinProbability
+
+# Since we cannot run this function without the actual WinCount and LoseCount matrices, 
+# this code serves as a template for how you would implement the logic based on the provided strategy.
+
